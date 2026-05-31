@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>音频分离器 - 黑白科技竞赛风</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@300;400;500;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        :root {
+            /* Monochrome Theme Colors */
+            --bg-dark: #121212;
+            --bg-light: #1e1e1e;
+            --text-primary: #e0e0e0;
+            --text-secondary: #a0a0a0;
+            --accent: #ffffff;
+            --border: #333333;
+            --shadow: 0 8px 16px rgba(0, 0, 0, 0.6);
+            --radius: 0.5rem;
+            --transition: all 0.3s ease;
+        }
+        html {
+            font-size: clamp(14px, 1.2vw, 18px);
+        }
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Roboto Mono', 'Roboto', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            line-height: 1.5;
+        }
+        .hero {
+            background: var(--bg-light);
+            padding: clamp(2rem,5vw,6rem) clamp(1rem,3vw,2rem);
+            text-align: center;
+            box-shadow: var(--shadow);
+        }
+        .hero h1 {
+            font-size: clamp(1.5rem,5vw,2.8rem);
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 0.1rem;
+        }
+        .hero p {
+            margin-top: 0.5rem;
+            font-size: clamp(1rem,2vw,1.2rem);
+            color: var(--text-secondary);
+        }
+        .container {
+            flex: 1;
+            width: 90%; max-width: 1200px;
+            margin: -3rem auto 2rem;
+            background: var(--bg-light);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: clamp(1.5rem,3vw,2.5rem);
+            transition: var(--transition);
+        }
+        h2 { color: var(--accent); margin-bottom: 0.5rem; }
+        /* Upload Card */
+        .upload-card {
+            border: 0.2rem dashed var(--border);
+            padding: clamp(1rem,2vw,2rem);
+            border-radius: var(--radius);
+            transition: var(--transition);
+            width: 100%;
+        }
+        .upload-card:hover { border-color: var(--accent); }
+        .upload-icon { font-size: clamp(2rem,5vw,3rem); color: var(--accent); margin-bottom: 1rem; }
+        .file-input { width: 100%; padding: 1rem; background: transparent; border: 0.2rem solid var(--border); border-radius: var(--radius); color: var(--text-primary); font-size: 1rem; }
+        .file-input:hover { border-color: var(--accent); }
+        .submit-btn {
+            margin-top: 1rem;
+            width: 100%; padding: 1rem;
+            background: none;
+            border: 0.2rem solid var(--accent);
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 0.05rem;
+            border-radius: var(--radius);
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        .submit-btn:hover { background: var(--accent); color: var(--bg-dark); }
+        /* Loader */
+        #loader { display: none; text-align: center; margin: 2rem 0; }
+        .loader-icon { font-size: clamp(2.5rem,5vw,3rem); color: var(--accent); animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        /* Audio Boxes */
+        .audio-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: clamp(1rem,2vw,2rem);
+            margin-top: 2rem;
+        }
+        .audio-box {
+            background: var(--bg-dark);
+            border: 0.2rem solid var(--border);
+            padding: 1rem;
+            border-radius: var(--radius);
+            text-align: center;
+            transition: var(--transition);
+        }
+        .audio-box.filled { border-color: var(--accent); box-shadow: var(--shadow); }
+        .audio-box h3 { color: var(--accent); font-size: 1.25rem; margin-bottom: 0.75rem; }
+        .audio-player { width: 100%; border-radius: 0.25rem; }
+        .download-btn { margin-top: 0.75rem; display: inline-block; padding: 0.5rem 1rem; border: 0.2rem solid var(--accent); border-radius: var(--radius); text-decoration: none; color: var(--accent); font-weight: 500; transition: var(--transition); font-size: 0.9rem; }
+        .download-btn:hover { background: var(--accent); color: var(--bg-dark); }
+        /* Features */
+        .feature-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: clamp(0.75rem,2vw,1.5rem);
+            margin-top: 3rem;
+        }
+        .feature-card {
+            background: var(--bg-dark);
+            border: 0.1rem solid var(--border);
+            padding: 1rem;
+            border-radius: var(--radius);
+            text-align: center;
+            transition: var(--transition);
+        }
+        .feature-card:hover { box-shadow: var(--shadow); transform: translateY(-0.5rem); }
+        .feature-icon { font-size: clamp(1.5rem,4vw,2.5rem); margin-bottom: 0.5rem; color: var(--accent); }
+        .feature-card h3 { color: var(--accent); margin-bottom: 0.5rem; font-size: 1.1rem; }
+        .feature-card p { color: var(--text-secondary); font-size: 0.85rem; }
+        /* Messages */
+        .message { margin: 1rem 0; padding: 1rem; border-radius: var(--radius); text-align: center; }
+        .error-message { background: rgba(255,0,0,0.1); color: #ff6b6b; }
+        .success-message { background: rgba(0,255,0,0.1); color: #6bff6b; }
+        /* Footer */
+        footer { background: var(--bg-light); padding: 1rem; text-align: center; margin-top: auto; }
+        .footer-links a { color: var(--text-secondary); margin: 0 0.5rem; font-size: 0.85rem; }
+        .footer-links a:hover { color: var(--accent); }
+        .copyright { font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.5rem; }
+        @media (max-width:768px) {
+            .hero h1 { font-size: clamp(1.5rem,6vw,2rem); }
+            .hero p { font-size: clamp(0.875rem,3vw,1rem); }
+        }
+    </style>
+</head>
+<body>
+    <div class="hero">
+        <h1><i class="fas fa-music"></i> 人声背景音频去噪 </h1>
+        <p>纯净人声，一键剥离背景噪音</p>
+    </div>
+    <div class="container">
+        <div class="upload-section">
+            <div class="upload-card">
+                <div class="upload-icon"><i class="fas fa-cloud-upload-alt"></i></div>
+                <h2>上传音频文件</h2>
+                <p>支持多种格式，最大50MB</p>
+                <form id="uploadForm" method="POST" enctype="multipart/form-data">
+                    <input type="file" name="file" class="file-input" accept=".mp3,.wav,.flac,.aac,.ogg" required>
+                    <button type="submit" class="submit-btn"><i class="fas fa-magic"></i> 开始分离</button>
+                </form>
+            </div>
+        </div>
+        <div id="loader">
+            <div class="loader-icon"><i class="fas fa-spinner"></i></div>
+            <p>处理音频中…</p>
+        </div>
+        {% if error %}<div class="message error-message"><i class="fas fa-exclamation-circle"></i> {{ error }}</div>{% endif %}
+        {% if success %}
+        <div class="message success-message"><i class="fas fa-check-circle"></i> 分离完成！</div>
+        <div class="audio-section">
+            <div class="audio-box filled"><h3><i class="fas fa-microphone"></i> 人声</h3><audio class="audio-player" controls><source src="{{ vocals_path }}" type="audio/wav"></audio><a href="{{ vocals_path }}" download class="download-btn"><i class="fas fa-download"></i> 下载</a></div>
+            <div class="audio-box filled"><h3><i class="fas fa-guitar"></i> 伴奏</h3><audio class="audio-player" controls><source src="{{ instrumental_path }}" type="audio/wav"></audio><a href="{{ instrumental_path }}" download class="download-btn"><i class="fas fa-download"></i> 下载</a></div>
+        </div>
+        {% else %}
+        <div class="audio-section">
+            <div class="audio-box empty"><h3><i class="fas fa-microphone"></i> 人声</h3><p>分离后显示</p></div>
+            <div class="audio-box empty"><h3><i class="fas fa-guitar"></i> 伴奏</h3><p>分离后显示</p></div>
+        </div>
+        {% endif %}
+        <div class="feature-cards">
+            <div class="feature-card"><div class="feature-icon"><i class="fas fa-bolt"></i></div><h3>快速高效</h3><p>AI极速分离</p></div>
+            <div class="feature-card"><div class="feature-icon"><i class="fas fa-star"></i></div><h3>高保真</h3><p>音质毫厘不损</p></div>
+            <div class="feature-card"><div class="feature-icon"><i class="fas fa-file-audio"></i></div><h3>多格式</h3><p>全格式兼容</p></div>
+        </div>
+    </div>
+    <script>
+        const form = document.getElementById('uploadForm');
+        const loader = document.getElementById('loader');
+        form.addEventListener('submit', () => { loader.style.display = 'block'; });
+    </script>
+</body>
+</html>

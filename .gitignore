@@ -36,5 +36,4 @@ tsconfig.tsbuildinfo
 
 utils/VideoAIClip/
 modules/OfflineSpeakersSubtitles/transcriber.py
-modules/AudioDenoising/
 modules/HardSubtitleExtraction/
