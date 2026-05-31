@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>视频字幕提取器 - 升级版</title>
+    <link href="https://vjs.zencdn.net/8.10.0/video-js.css" rel="stylesheet">
+    <script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
+    <style>
+        body { background: #121212; color: #fff; font-family: sans-serif; text-align: center; padding: 20px; margin: 0; display: flex; }
+        form { margin-bottom: 30px; width: 100%; }
+        .video-container { flex: 2; max-width: 900px; margin: 0 auto; position: relative; }
+        .video-container .video-js { width: 100%; height: auto; }
+        .video-container .video-js.vjs-fluid { padding-top: 56.25%; position: relative; }
+        .video-container video { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+        #subtitlePopup { display: block; position: absolute; top: 70%; left: 35%; transform: translate(-35%, -35%); width: 90%; height: 20%; border: 2px dashed #fff; background-color: rgba(0, 0, 0, 0.2); color: #fff; font-size: 16px; font-weight: bold; padding: 10px; border-radius: 4px; z-index: 99; cursor: move; user-select: none; overflow: hidden; text-align: left; line-height: 1.4; }
+        /* 新增侧边栏 */
+        #subtitleList { flex: 1; max-width: 300px; margin-left: 20px; background: #1e1e1e; border-radius: 8px; padding: 10px; overflow-y: auto; height: calc(100vh - 40px); text-align: left; }
+        #subtitleList h2 { font-size: 18px; margin-bottom: 10px; }
+        #subtitleList ul { list-style: none; padding: 0; margin: 0; }
+        #subtitleList li { margin-bottom: 8px; line-height: 1.4; }
+    </style>
+</head>
+<body>
+<div style="flex: 1;">
+    <h1>🎬 视频字幕提取器（拖动 OCR 窗口 实时识别）</h1>
+    <form action="/upload" method="POST" enctype="multipart/form-data">
+        <input type="file" name="video" accept="video/*" required>
+        <button type="submit">上传并播放</button>
+    </form>
+
+    {% if video_url %}
+        <div class="video-container">
+            <div data-vjs-player>
+                <video id="video-player" class="video-js vjs-default-skin vjs-fluid" controls preload="auto">
+                    <source src="{{ video_url }}" type="video/mp4">
+                </video>
+            </div>
+            <div id="subtitlePopup">拖动此窗口以设置 OCR 区域</div>
+        </div>
+    {% endif %}
+</div>
+<!-- 侧边栏展示识别字幕 -->
+<div id="subtitleList">
+    <h2>识别字幕列表</h2>
+    <ul id="list"></ul>
+    <button id="exportSrtBtn" style="width:100%; padding:8px; margin-top:10px;">导出 SRT</button>
+</div>
+
+<script>
+    const player = videojs('video-player');
+    const subtitlePopup = document.getElementById('subtitlePopup');
+    const listEl = document.getElementById('list');
+    const exportBtn = document.getElementById('exportSrtBtn');
+
+    let dragging = false, offsetX = 0, offsetY = 0;
+    let lastText = '';
+
+    // 用来存所有字幕
+    const subtitles = [];
+
+    // 把秒数格式化成 SRT 要求的 “HH:MM:SS,mmm”
+    function formatSrtTime(seconds) {
+        const date = new Date(seconds * 1000);
+        const hh = String(date.getUTCHours()).padStart(2, '0');
+        const mm = String(date.getUTCMinutes()).padStart(2, '0');
+        const ss = String(date.getUTCSeconds()).padStart(2, '0');
+        const mmm = String(date.getUTCMilliseconds()).padStart(3, '0');
+        return `${hh}:${mm}:${ss},${mmm}`;
+    }
+
+
+    subtitlePopup.addEventListener('mousedown', e => {
+        dragging = true;
+        offsetX = e.clientX - subtitlePopup.offsetLeft;
+        offsetY = e.clientY - subtitlePopup.offsetTop;
+    });
+
+    document.addEventListener('mousemove', e => {
+        if (!dragging) return;
+        const container = document.querySelector('.video-container');
+        const rect = container.getBoundingClientRect();
+        let x = e.clientX - offsetX;
+        let y = e.clientY - offsetY;
+        x = Math.max(rect.left, Math.min(x, rect.right - subtitlePopup.offsetWidth));
+        y = Math.max(rect.top, Math.min(y, rect.bottom - subtitlePopup.offsetHeight));
+        subtitlePopup.style.left = x + 'px';
+        subtitlePopup.style.top = y + 'px';
+    });
+
+    document.addEventListener('mouseup', () => { dragging = false; });
+
+    // 新增：把识别到的每条字幕推入数组，并显示时间戳
+    function addSubtitle(text, time) {
+        if (!text || text === lastText) return;
+        lastText = text;
+        subtitles.push({ start: time, text });
+
+        const li = document.createElement('li');
+        li.textContent = `[${formatSrtTime(time)}] ${text}`;
+        listEl.appendChild(li);
+        listEl.scrollTop = listEl.scrollHeight;
+    }
+
+    // 定时截图并 OCR
+    function triggerRecognition() {
+        const videoEl = document.querySelector('.video-container video');
+        if (!videoEl || videoEl.readyState < 2) return;
+
+        const currentTime = videoEl.currentTime;
+        const container = document.querySelector('.video-container');
+        const cRect = container.getBoundingClientRect();
+        const pRect = subtitlePopup.getBoundingClientRect();
+        const scaleX = videoEl.videoWidth / cRect.width;
+        const scaleY = videoEl.videoHeight / cRect.height;
+
+        const sx = Math.round((pRect.left - cRect.left) * scaleX);
+        const sy = Math.round((pRect.top - cRect.top) * scaleY);
+        const sw = Math.round(pRect.width * scaleX);
+        const sh = Math.round(pRect.height * scaleY);
+        if (sw <= 0 || sh <= 0) return;
+
+        const canvas = document.createElement('canvas');
+        canvas.width = sw;
+        canvas.height = sh;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(videoEl, sx, sy, sw, sh, 0, 0, sw, sh);
+
+        canvas.toBlob(blob => {
+            const form = new FormData();
+            form.append('image', blob, 'capture.png');
+            fetch('/preview', { method: 'POST', body: form })
+                .then(res => res.json())
+                .then(data => {
+                    const text = data.text || '(未识别到字幕)';
+                    subtitlePopup.textContent = text;
+                    addSubtitle(text, currentTime);
+                })
+                .catch(() => {
+                    subtitlePopup.textContent = '❌ 识别失败';
+                });
+        });
+    }
+
+    // 1秒调用一次
+    player.ready(() => { setInterval(triggerRecognition, 1000); });
+
+    // 新增：点击导出 SRT
+    exportBtn.addEventListener('click', () => {
+        if (subtitles.length === 0) {
+            alert('暂无字幕可导出');
+            return;
+        }
+        let srt = '';
+        for (let i = 0; i < subtitles.length; i++) {
+            const curr = subtitles[i];
+            const next = subtitles[i + 1];
+            // 本条结束时间：下一条开始或 +2s 默认
+            const endTime = next ? next.start : (curr.start + 2);
+            srt += `${i + 1}\n`;
+            srt += `${formatSrtTime(curr.start)} --> ${formatSrtTime(endTime)}\n`;
+            srt += `${curr.text}\n\n`;
+        }
+        const blob = new Blob([srt], { type: 'text/plain;charset=utf-8' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = 'subtitles.srt';
+        link.click();
+        URL.revokeObjectURL(link.href);
+    });
+
+</script>
+</body>
+</html>
