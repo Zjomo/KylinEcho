@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>校史馆多模态交互系统</title>
+  <!-- Bootstrap CSS
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+  -->
+  <link href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.bootcdn.net/ajax/libs/bootstrap-icons/1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary-blue: #1a73e8;
+      --deep-blue: #0d47a1;
+      --light-blue: #8ab6f9;
+      --accent-blue: #4fc3f7;
+      --card-bg: rgba(255, 255, 255, 0.85);
+      --glow-color: rgba(79, 195, 247, 0.3);
+      --tech-grid: rgba(26, 115, 232, 0.08);
+    }
+
+    body {
+      background: linear-gradient(135deg, #e3f2fd, #f5f9ff, #e3f2fd);
+      background-size: 400% 400%;
+      animation: gradientBG 15s ease infinite;
+      font-family: 'Noto Sans SC', sans-serif;
+      min-height: 100vh;
+      position: relative;
+      overflow-x: hidden;
+      color: #2a4a7e;
+      margin: 0;
+      padding: 0;
+    }
+
+    /* 科技背景 */
+    .tech-background {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      overflow: hidden;
+      opacity: 0.7;
+    }
+
+    .grid-lines {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image:
+        linear-gradient(var(--tech-grid) 1px, transparent 1px),
+        linear-gradient(90deg, var(--tech-grid) 1px, transparent 1px);
+      background-size: 40px 40px;
+    }
+
+    .floating-shapes {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    .shape {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(60px);
+      opacity: 0.1;
+    }
+
+    .shape-1 {
+      width: 400px;
+      height: 400px;
+      background: var(--accent-blue);
+      top: 20%;
+      left: 10%;
+      animation: float 25s infinite ease-in-out;
+    }
+
+    .shape-2 {
+      width: 300px;
+      height: 300px;
+      background: var(--light-blue);
+      top: 50%;
+      right: 15%;
+      animation: float 30s infinite ease-in-out reverse;
+    }
+
+    .shape-3 {
+      width: 200px;
+      height: 200px;
+      background: var(--primary-blue);
+      bottom: 10%;
+      left: 30%;
+      animation: float 20s infinite ease-in-out;
+    }
+
+    /* 动画 */
+    @keyframes gradientBG {
+      0% { background-position: 0% 50% }
+      50% { background-position: 100% 50% }
+      100% { background-position: 0% 50% }
+    }
+
+    @keyframes float {
+      0% { transform: translate(0, 0) rotate(0deg); }
+      25% { transform: translate(20px, -30px) rotate(10deg); }
+      50% { transform: translate(0, -50px) rotate(0deg); }
+      75% { transform: translate(-20px, -30px) rotate(-10deg); }
+      100% { transform: translate(0, 0) rotate(0deg); }
+    }
+
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 var(--glow-color); }
+      70% { box-shadow: 0 0 0 15px rgba(79, 195, 247, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(79, 195, 247, 0); }
+    }
+
+    .header {
+      margin-top: 60px;
+      text-align: center;
+      color: var(--deep-blue);
+      font-family: 'Orbitron', sans-serif;
+      font-weight: 700;
+      text-shadow: 0 0 15px rgba(26, 115, 232, 0.15);
+      position: relative;
+      padding-bottom: 15px;
+      letter-spacing: 2px;
+    }
+
+    .header::after {
+      content: "";
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 200px;
+      height: 4px;
+      background: linear-gradient(90deg, transparent, var(--accent-blue), transparent);
+      border-radius: 2px;
+    }
+
+    .sub-header {
+      text-align: center;
+      color: #4a6fa5;
+      font-size: 1.2rem;
+      margin-top: -5px;
+      margin-bottom: 40px;
+      letter-spacing: 1px;
+      font-weight: 400;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.75);
+      border: none;
+      border-radius: 15px;
+      box-shadow: 0 8px 30px rgba(0, 102, 204, 0.1);
+      transition: all 0.4s ease;
+      height: 100%;
+      backdrop-filter: blur(12px);
+      overflow: hidden;
+      position: relative;
+      border: 1px solid rgba(255, 255, 255, 0.6);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .card:hover {
+      transform: translateY(-10px) scale(1.03);
+      box-shadow: 0 15px 40px rgba(26, 115, 232, 0.2);
+    }
+
+    .card::before {
+      content: "";
+      position: absolute;
+      top: -2px;
+      left: -2px;
+      right: -2px;
+      bottom: -2px;
+      background: linear-gradient(45deg, var(--light-blue), var(--accent-blue), var(--primary-blue));
+      z-index: -1;
+      border-radius: 17px;
+      animation: pulse 4s infinite;
+      opacity: 0.5;
+    }
+
+    .card-icon {
+      font-size: 3rem;
+      margin-bottom: 15px;
+      position: relative;
+      display: inline-block;
+      animation: float 5s ease-in-out infinite;
+    }
+
+    .card-icon::after {
+      content: "";
+      position: absolute;
+      bottom: -10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 50px;
+      height: 4px;
+      background: linear-gradient(90deg, var(--light-blue), var(--accent-blue));
+      border-radius: 2px;
+    }
+
+    .card h5 {
+      font-weight: 700;
+      color: var(--deep-blue);
+      margin-bottom: 12px;
+      font-family: 'Orbitron', sans-serif;
+      letter-spacing: 1px;
+    }
+
+    .card p {
+      color: #4a6fa5;
+      font-size: 1rem;
+      min-height: 50px;
+      padding: 0 10px;
+    }
+
+    .btn-custom {
+      background: linear-gradient(135deg, var(--light-blue), var(--primary-blue));
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-weight: bold;
+      padding: 12px 30px;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 5px 20px rgba(26, 115, 232, 0.3);
+      letter-spacing: 1px;
+      font-family: 'Orbitron', sans-serif;
+      margin-top: 10px;
+    }
+
+    .btn-custom:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 25px rgba(26, 115, 232, 0.5);
+    }
+
+    .btn-custom::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg,
+        transparent,
+        rgba(255, 255, 255, 0.4),
+        transparent);
+      transform: translateX(-100%);
+      transition: transform 0.6s ease;
+    }
+
+    .btn-custom:hover::after {
+      transform: translateX(100%);
+    }
+
+    .grid-container {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr); /* 固定3列 */
+      gap: 35px;
+      padding: 30px 0 80px;
+      max-width: 1300px;
+      margin: 0 auto;
+    }
+    @media (max-width: 992px) {
+      .grid-container {
+        grid-template-columns: repeat(2, 1fr); /* 中等屏幕：2列 */
+      }
+    }
+
+    @media (max-width: 576px) {
+      .grid-container {
+        grid-template-columns: 1fr; /* 小屏幕：1列 */
+      }
+    }
+
+    .datetime-container {
+      background: rgba(255, 255, 255, 0.7);
+      border-radius: 15px;
+      padding: 15px 30px;
+      display: inline-block;
+      margin: 0 auto;
+      backdrop-filter: blur(5px);
+      box-shadow: 0 5px 20px rgba(0, 102, 204, 0.1);
+      border: 1px solid rgba(79, 195, 247, 0.3);
+    }
+
+    #datetime {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.3rem;
+      color: var(--deep-blue);
+      letter-spacing: 2px;
+      text-shadow: 0 0 10px rgba(79, 195, 247, 0.3);
+      font-weight: 500;
+    }
+
+    .footer {
+      text-align: center;
+      padding: 25px;
+      color: #4a6fa5;
+      font-size: 1rem;
+      background: rgba(255, 255, 255, 0.7);
+      border-top: 1px solid rgba(79, 195, 247, 0.2);
+      backdrop-filter: blur(10px);
+    }
+
+    .university-logo {
+      width: 220px;
+      margin: 0 auto 25px;
+      filter: drop-shadow(0 0 10px rgba(79, 195, 247, 0.3));
+    }
+
+    .motto {
+      text-align: center;
+      color: var(--primary-blue);
+      font-style: italic;
+      margin: -15px 0 40px;
+      font-size: 1.1rem;
+      text-shadow: 0 0 5px rgba(79, 195, 247, 0.2);
+    }
+
+    .tech-particles {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+
+    .particle {
+      position: absolute;
+      background: rgba(79, 195, 247, 0.3);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+    .history-timeline {
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 20px;
+      background: rgba(255, 255, 255, 0.8);
+      border-radius: 15px;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 8px 30px rgba(0, 102, 204, 0.1);
+    }
+
+    .timeline-header {
+      text-align: center;
+      color: var(--deep-blue);
+      font-family: 'Orbitron', sans-serif;
+      margin-bottom: 20px;
+      position: relative;
+    }
+
+    .timeline-header::after {
+      content: "";
+      position: absolute;
+      bottom: -10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100px;
+      height: 3px;
+      background: linear-gradient(90deg, var(--light-blue), var(--accent-blue));
+      border-radius: 2px;
+    }
+
+    .timeline {
+      position: relative;
+      max-width: 700px;
+      margin: 0 auto;
+    }
+
+    .timeline::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 4px;
+      background: var(--accent-blue);
+      left: 50%;
+      margin-left: -2px;
+    }
+
+    .timeline-item {
+      padding: 20px;
+      position: relative;
+      width: 50%;
+      box-sizing: border-box;
+    }
+
+    .timeline-item:nth-child(odd) {
+      left: 0;
+      padding-right: 50px;
+      text-align: right;
+    }
+
+    .timeline-item:nth-child(even) {
+      left: 50%;
+      padding-left: 50px;
+    }
+
+    .timeline-content {
+      padding: 20px;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 4px 15px rgba(0, 102, 204, 0.1);
+      position: relative;
+    }
+
+    .timeline-year {
+      font-weight: bold;
+      color: var(--deep-blue);
+      font-family: 'Orbitron', sans-serif;
+      margin-bottom: 10px;
+      display: block;
+    }
+
+    .timeline-item:nth-child(odd) .timeline-content::after {
+      content: '';
+      position: absolute;
+      border-style: solid;
+      border-width: 10px 0 10px 10px;
+      border-color: transparent transparent transparent white;
+      right: -10px;
+      top: 30px;
+    }
+
+    .timeline-item:nth-child(even) .timeline-content::after {
+      content: '';
+      position: absolute;
+      border-style: solid;
+      border-width: 10px 10px 10px 0;
+      border-color: transparent white transparent transparent;
+      left: -10px;
+      top: 30px;
+    }
+
+    .timeline-dot {
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      background: white;
+      border: 4px solid var(--accent-blue);
+      border-radius: 50%;
+      top: 30px;
+      right: -10px;
+      z-index: 1;
+    }
+
+    .timeline-item:nth-child(even) .timeline-dot {
+      left: -10px;
+      right: auto;
+    }
+
+    .message-card {
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 30px;
+      background: rgba(255, 255, 255, 0.8);
+      border-radius: 15px;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 8px 30px rgba(0, 102, 204, 0.1);
+    }
+
+    .message-header {
+      text-align: center;
+      color: var(--deep-blue);
+      font-family: 'Orbitron', sans-serif;
+      margin-bottom: 20px;
+      position: relative;
+    }
+
+    .message-header::after {
+      content: "";
+      position: absolute;
+      bottom: -10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100px;
+      height: 3px;
+      background: linear-gradient(90deg, var(--light-blue), var(--accent-blue));
+      border-radius: 2px;
+    }
+
+    @media (max-width: 768px) {
+      .header {
+        font-size: 1.8rem;
+        margin-top: 40px;
+      }
+      .sub-header {
+        font-size: 1rem;
+      }
+      .grid-container {
+        grid-template-columns: 1fr;
+        gap: 25px;
+        padding: 20px 20px 60px;
+      }
+      .datetime-container {
+        padding: 12px 20px;
+      }
+      #datetime {
+        font-size: 1.1rem;
+      }
+      .timeline::before {
+        left: 30px;
+      }
+      .timeline-item {
+        width: 100%;
+        padding-left: 70px;
+        padding-right: 20px;
+        text-align: left !important;
+      }
+      .timeline-item:nth-child(even) {
+        left: 0;
+        padding-left: 70px;
+      }
+      .timeline-item:nth-child(odd) .timeline-content::after,
+      .timeline-item:nth-child(even) .timeline-content::after {
+        border-width: 10px 10px 10px 0;
+        border-color: transparent white transparent transparent;
+        left: -10px;
+        right: auto;
+      }
+      .timeline-dot {
+        left: 21px;
+        right: auto;
+      }
+      .timeline-item:nth-child(even) .timeline-dot {
+        left: 21px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="tech-background">
+    <div class="grid-lines"></div>
+    <div class="floating-shapes">
+      <div class="shape shape-1"></div>
+      <div class="shape shape-2"></div>
+      <div class="shape shape-3"></div>
+    </div>
+    <div class="tech-particles" id="particles"></div>
+  </div>
+
+  <div class="container">
+    <div class="text-center mb-4">
+      <div class="university-logo">
+        <svg viewBox="0 0 300 80" xmlns="http://www.w3.org/2000/svg">
+          <path d="M20,30 C40,10 80,10 100,30 S160,50 180,30 S240,10 280,30" stroke="#1a73e8" stroke-width="3" fill="none" stroke-linecap="round"/>
+          <text x="150" y="60" text-anchor="middle" font-family="Orbitron" font-size="20" fill="#1a73e8" font-weight="700">校史馆 · 智慧交互平台</text>
+        </svg>
+      </div>
+    </div>
+
+    <h1 class="header">校史馆多模态交互服务系统</h1>
+    <p class="motto">传承历史文脉 · 智创科技未来</p>
+
+    <div class="text-center mb-5">
+      <div class="datetime-container">
+        <p class="sub-header m-0" id="datetime">加载中...</p>
+      </div>
+    </div>
+
+    <div class="grid-container">
+      <div class="card p-4 text-center">
+        <div class="card-icon" style="color: #1a73e8;"><i class="bi bi-person-bounding-box"></i></div>
+        <h5>人脸识别系统</h5>
+        <p>智能识别访客身份，实现个性化交互体验</p>
+        <a href="/face" class="btn btn-custom mt-2">进入系统</a>
+      </div>
+
+      <div class="card p-4 text-center">
+        <div class="card-icon" style="color: #4da6ff;"><i class="bi bi-mic-fill"></i></div>
+        <h5>智能交互助手</h5>
+        <p>提供多模态AI视觉、听觉的智能问答服务</p>
+        <a href="voice" class="btn btn-custom mt-2">开始对话</a>
+      </div>
+
+      <div class="card p-4 text-center">
+        <div class="card-icon" style="color: #ff9800;"><i class="bi bi-images"></i></div>
+        <h5>智能校史馆员</h5>
+        <p>实现校史文物与历史资料的多模态对话服务</p>
+        <a href="robot" class="btn btn-custom mt-2">查看展品</a>
+      </div>
+
+      <div class="card p-4 text-center">
+        <div class="card-icon" style="color: #00bcd4;"><i class="bi bi-cloud-arrow-up-fill"></i></div>
+        <h5>智能数据上传</h5>
+        <p>上传音频、图像及历史文档数据</p>
+        <a href="upload" class="btn btn-custom mt-2">上传文件</a>
+      </div>
+
+      <div class="card p-4 text-center">
+        <div class="card-icon" style="color: #673ab7;"><i class="bi bi-cpu-fill"></i></div>
+        <h5>AI智能体控制台</h5>
+        <p>多模态场景服务管理与监控</p>
+        <a href="agent" class="btn btn-custom mt-2">控制面板</a>
+      </div>
+
+      <div class="card p-4 text-center">
+        <div class="card-icon" style="color: #9c27b0;"><i class="bi bi-journals"></i></div>
+        <h5>校史数字档案</h5>
+        <p>多媒体展示珍贵校史文物与历史资料</p>
+        <a href="exhibits" class="btn btn-custom mt-2">浏览档案</a>
+      </div>
+    </div>
+
+    <div class="message-card">
+      <h3 class="message-header">访客留言板</h3>
+      <div class="card p-4 text-center">
+        <div class="card-icon" style="color: #00bcd4;"><i class="bi bi-chat-dots-fill"></i></div>
+        <h5>留下您的足迹</h5>
+        <p>欢迎留下您对校史馆的建议或祝福</p>
+        <form id="messageForm">
+          <input type="text" class="form-control my-2" placeholder="您的姓名" id="username" required>
+          <textarea class="form-control my-2" placeholder="留言内容..." id="message" rows="3" required></textarea>
+          <button type="submit" class="btn btn-custom mt-2">提交留言</button>
+        </form>
+        <div id="messageBoard" class="mt-3 text-start" style="max-height: 200px; overflow-y: auto;"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <p>© 2025 校史馆多模态交互系统 | 科技赋能历史 · 智能传承文化</p>
+  </div>
+
+  <script>
+    document.getElementById('messageForm').addEventListener('submit', function (e) {
+      e.preventDefault();
+      const username = document.getElementById('username').value.trim();
+      const message = document.getElementById('message').value.trim();
+      if (username && message) {
+        const board = document.getElementById('messageBoard');
+        const msgHTML = `<div class="alert alert-info"><strong>${username}</strong>: ${message}</div>`;
+        board.innerHTML = msgHTML + board.innerHTML;
+        this.reset();
+      }
+    });
+
+    // 更新时间
+    function updateDateTime() {
+      const now = new Date();
+      const formatted = now.toLocaleString('zh-CN', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        weekday: 'long',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+      });
+      document.getElementById('datetime').innerText = formatted;
+    }
+
+    updateDateTime();
+    setInterval(updateDateTime, 1000);
+
+    // 粒子背景效果
+    function createParticles() {
+      const container = document.getElementById('particles');
+      const particleCount = 80;
+
+      for (let i = 0; i < particleCount; i++) {
+        const particle = document.createElement('div');
+        particle.classList.add('particle');
+
+        // 随机属性
+        const size = Math.random() * 4 + 1;
+        const posX = Math.random() * 100;
+        const posY = Math.random() * 100;
+        const animationDuration = Math.random() * 20 + 10;
+        const animationDelay = Math.random() * 5;
+        const opacity = Math.random() * 0.3 + 0.2;
+
+        particle.style.width = `${size}px`;
+        particle.style.height = `${size}px`;
+        particle.style.left = `${posX}%`;
+        particle.style.top = `${posY}%`;
+        particle.style.opacity = opacity;
+        particle.style.animation = `float ${animationDuration}s infinite ease-in-out ${animationDelay}s`;
+
+        container.appendChild(particle);
+      }
+    }
+
+    // 卡片悬停效果
+    document.querySelectorAll('.card').forEach(card => {
+      card.addEventListener('mouseenter', function() {
+        this.style.zIndex = '10';
+      });
+
+      card.addEventListener('mouseleave', function() {
+        this.style.zIndex = '1';
+      });
+    });
+  </script>
+</body>
+</html>

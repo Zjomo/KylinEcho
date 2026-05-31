@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>说话人识别转录</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #000;
+            --fg: #fff;
+            --accent: #888;
+            --segment-bg: #111;
+            --border: #444;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Roboto Mono', monospace;
+            background-color: var(--bg);
+            color: var(--fg);
+            padding: 20px;
+            line-height: 1.4;
+        }
+        h1 { font-size: 2rem; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 10px; }
+        h2 { font-size: 1.2rem; margin-bottom: 10px; color: var(--fg); }
+
+        .layout {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        .left-column {
+            flex: 1 1 50%;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .right-column {
+            flex: 1 1 40%;
+            max-height: 80vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        form { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center; }
+        input[type="file"] { padding: 8px; background: var(--segment-bg); border: 1px solid var(--border); color: var(--fg); }
+        label { grid-column: span 2; font-size: 0.85rem; color: var(--accent); }
+        button { padding: 10px 20px; background: transparent; border: 2px solid var(--fg); color: var(--fg); text-transform: uppercase; cursor: pointer; transition: background 0.3s, color 0.3s; }
+        button:hover { background: var(--fg); color: var(--bg); }
+
+        #loading { display: none; font-weight: 700; color: var(--fg); padding: 10px; gap: 10px; }
+        .spinner { border: 4px solid var(--border); border-top: 4px solid var(--fg); border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .segment {
+            background: var(--segment-bg);
+            border-left: 4px solid var(--fg);
+            padding: 12px;
+            margin: 10px 0;
+            font-size: 0.9rem;
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 8px;
+        }
+        .segment .speaker { font-weight: 700; text-transform: uppercase; font-size: 0.85rem; }
+        .segment .time { color: var(--accent); font-size: 0.75rem; }
+        .segment .text { grid-column: 1 / -1; margin-top: 6px; }
+        .placeholder { opacity: 0.5; }
+
+        .pagination { display: flex; justify-content: center; align-items: center; gap: 10px; }
+        .pagination button { padding: 6px 12px; font-size: 0.85rem; }
+        .pagination span { font-size: 0.9rem; color: var(--accent); }
+
+        #logOutput {
+            background: var(--segment-bg);
+            border: 1px solid var(--border);
+            padding: 10px;
+            min-height: 500px;
+            max-height: 80vh;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            font-size: 0.85rem;
+            line-height: 1.4;
+            word-break: break-word;
+        }
+
+        .log-controls {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+
+        .download-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        .download-buttons a {
+            text-decoration: none;
+            border: 2px solid var(--fg);
+            padding: 8px 14px;
+            color: var(--fg);
+            text-align: center;
+            transition: background 0.3s, color 0.3s;
+        }
+        .download-buttons a:hover {
+            background: var(--fg);
+            color: var(--bg);
+        }
+    </style>
+</head>
+<body>
+<h1> 离线字幕生成 </h1>
+<div class="layout">
+    <div class="left-column">
+        <form id="uploadForm" action="/" method="POST" enctype="multipart/form-data">
+            <input type="file" name="audio_file" accept=".wav,.mp3,.m4a,.mp4" required>
+            <label>
+                <input type="checkbox" name="use_diarization"> 启用说话人识别（否则只生成字幕）
+            </label>
+            <button type="submit">上传并识别</button>
+        </form>
+
+        <div id="loading">
+            <div class="spinner"></div>
+            正在处理中，请稍候...
+        </div>
+
+        <div>
+            <h2>识别结果：</h2>
+            <div id="segmentsContainer">
+                <div class="segment placeholder"><div class="speaker">--</div><div class="time">--</div><div class="text">等待识别结果...</div></div>
+                <div class="segment placeholder"><div class="speaker">--</div><div class="time">--</div><div class="text">等待识别结果...</div></div>
+                <div class="segment placeholder"><div class="speaker">--</div><div class="time">--</div><div class="text">等待识别结果...</div></div>
+                <div class="segment placeholder"><div class="speaker">--</div><div class="time">--</div><div class="text">等待识别结果...</div></div>
+                <div class="segment placeholder"><div class="speaker">--</div><div class="time">--</div><div class="text">等待识别结果...</div></div>
+            </div>
+            <div class="pagination">
+                <button id="prevPage" disabled>上一页</button>
+                <span id="pageInfo">1 / 1</span>
+                <button id="nextPage" disabled>下一页</button>
+            </div>
+
+            {% if srt_file or video_file %}
+            <div class="download-buttons">
+                {% if srt_file %}
+                <a href="{{ url_for('download_file', filename=srt_file) }}" download>🎬 下载字幕文件（.srt）</a>
+                {% endif %}
+                {% if video_file %}
+                <a href="{{ url_for('download_file', filename=video_file) }}" download>📺 下载带字幕视频文件（.mp4）</a>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="right-column">
+        <h2>后台日志：</h2>
+        <div class="log-controls">
+            <button onclick="downloadLog()">导出日志</button>
+            <button onclick="clearLog()">清空日志</button>
+        </div>
+        <pre id="logOutput">（等待日志推送...）</pre>
+    </div>
+</div>
+
+{% if results %}
+<script>
+    const transcriptSegments = {{ results|tojson }};
+    const pageSize = 5;
+    let currentPage = 1;
+
+    function renderPage(page) {
+        const container = document.getElementById('segmentsContainer');
+        container.innerHTML = '';
+        const totalPages = Math.ceil(transcriptSegments.length / pageSize);
+        const start = (page - 1) * pageSize;
+        const end = Math.min(start + pageSize, transcriptSegments.length);
+
+        for (let i = start; i < end; i++) {
+            const seg = transcriptSegments[i];
+            const el = document.createElement('div');
+            el.className = 'segment';
+            el.innerHTML = `<div class="speaker">${seg.speaker}</div><div class="time">${seg.start}s - ${seg.end}s</div><div class="text">${seg.text}</div>`;
+            container.appendChild(el);
+        }
+
+        document.getElementById('pageInfo').textContent = `${page} / ${totalPages}`;
+        document.getElementById('prevPage').disabled = page <= 1;
+        document.getElementById('nextPage').disabled = page >= totalPages;
+    }
+
+    document.getElementById('prevPage').addEventListener('click', () => {
+        if (currentPage > 1) renderPage(--currentPage);
+    });
+    document.getElementById('nextPage').addEventListener('click', () => {
+        const totalPages = Math.ceil(transcriptSegments.length / pageSize);
+        if (currentPage < totalPages) renderPage(++currentPage);
+    });
+
+    if (transcriptSegments.length) renderPage(1);
+</script>
+{% endif %}
+<script>
+  const logOutput = document.getElementById("logOutput");
+  const saved = localStorage.getItem("transcriptLogs");
+  if (saved) {
+    logOutput.textContent = saved;
+  }
+
+  const evtSource = new EventSource("/logs");
+  let logInitialized = false;
+  evtSource.onmessage = function(event) {
+    if (!logInitialized &&
+        (logOutput.textContent.startsWith('（等待日志') )) {
+      logOutput.textContent = '';
+      logInitialized = true;
+    }
+    logOutput.textContent += event.data + "\n";
+    localStorage.setItem("transcriptLogs", logOutput.textContent);
+    requestAnimationFrame(() => {
+      logOutput.scrollTop = logOutput.scrollHeight;
+    });
+  };
+
+  document.getElementById('uploadForm').addEventListener('submit', () => {
+    document.getElementById('loading').style.display = 'flex';
+  });
+
+  function clearLog() {
+    logOutput.textContent = '';
+    localStorage.removeItem("transcriptLogs");
+  }
+
+  function downloadLog() {
+    const blob = new Blob([logOutput.textContent], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'log.txt';
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+</script>
+
+</body>
+</html>

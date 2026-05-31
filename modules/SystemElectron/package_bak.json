@@ -1,0 +1,27 @@
+{
+  "name": "systemelectron",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "main": "main.cjs",
+  "scripts": {
+    "dev": "vite",
+    "build": "vue-tsc -b && vite build",
+    "preview": "vite preview",
+    "electron": "wait-on tcp:8848 && electron .",
+    "electron:serve": "concurrently -k \"npm run dev\" \"npm run electron\""
+  },
+  "dependencies": {
+    "electron": "^37.2.1",
+    "vue": "^3.5.17"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^6.0.0",
+    "@vue/tsconfig": "^0.7.0",
+    "concurrently": "^9.2.0",
+    "typescript": "~5.8.3",
+    "vite": "^7.0.4",
+    "vue-tsc": "^2.2.12",
+    "wait-on": "^8.0.3"
+  }
+}

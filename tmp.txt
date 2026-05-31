@@ -1,0 +1,6 @@
+视频字幕提取器
+
+
+https://d6f10f789dc8.ngrok-free.app
+
+win.py
