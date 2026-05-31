@@ -1,0 +1,432 @@
+-------------------------------------------------- 1、modelscope使用笔记 -------------------------------------------------- 
+① 文本转视频
+环境配置：
+pip install modelscope==1.4.2
+pip install open_clip_torch
+pip install pytorch-lightning
+
+GPU配置：
+（1）安装NVIDIA驱动程序
+【指定机器的显卡型号：https://www.nvidia.com/content/DriverDownloads/confirmation.php?url=/Windows/555.99/555.99-notebook-win10-win11-64bit-international-dch-whql.exe&lang=us&type=geforcem】
+
+（2）安装CUDA Toolkit
+【https://developer.nvidia.com/cuda-11.1.1-download-archive?target_os=Windows&target_arch=x86_64&target_version=10&target_type=exelocal】
+
+（3）安装与cuDNN【https://developer.nvidia.com/cudnn-downloads?target_os=Windows&target_arch=x86_64&target_version=10】
+	将cuDNN库文件(.dll 文件)复制到CUDA Toolkit的 bin 目录下。
+	将cuDNN头文件(.h 文件)复制到CUDA Toolkit的 include 目录下。
+	将cuDNN的二进制文件(.cudnn 文件)复制到CUDA Toolkit的 lib\x64 目录下。
+（4）环境变量配置
+	添加CUDA Toolkit的 bin 和 libnvvp至PATH。
+
+（5）安装pyTorch对应的GPU版本库【可以直接下载conda + toolkit版本的GPU环境】
+【python3.7】
+pip install torch==1.10.1+cu111 torchvision==0.10.1+cu111 torchaudio==0.10.1+cu111 -f https://download.pytorch.org/whl/torch_stable.html --proxy http://127.0.0.1:7890
+
+② 安装hugging face的模型文件至本地
+可以找到导入模型时，自动下载的缓存文件，该文件包含.bin、config.json等文件，进而可以实现模型文件的本地导入与使用
+【模型文件默认缓存位置：C:\Users\Mr\.cache\huggingface\hub】
+
+③ git安装文件至本地
+mkdir tmp
+cd tmp
+git clone URL_OF_FILE.git               下载至本地
+cd URL_OF_FILE                         
+python setup.py install                   安装依赖
+
+huggingface 模块出现torch、torchvision、torchaudio版本不兼容的奇葩问题，所以现在基于退而求其次，使用python3.7对应的环境来实现后续内容
+
+
+-------------------------------------------------- 2、open-kylin开发笔记 -------------------------------------------------- 
+（1）更新包管理器
+sudo apt update               更新apt包
+
+（2）ssh配置
+sudo apt install ssh -y       安装ssh服务
+sudo systemctl enable ssh  开机自启动ssh服务
+
+（3）安装AI大模型包【如何使用？】
+sudo apt install kylin-ai-model-manager
+
+（4）安装python，并设计虚拟环境
+删除原本的python2.X：
+sudo apt remove python
+
+安装python3.X：
+sudo apt install python3
+
+安装pip：
+sudo apt install python3-pip
+
+安装virtualenv：
+sudo pip3 install virtualenv
+
+创建虚拟环境：
+mkdir videoai
+cd videoai
+sudo chmod 777 videoai
+virtualenv videoai
+
+激活虚拟环境：
+source venv/bin/activate
+
+退出虚拟环境：
+deactivate
+
+配置国内阿里云源：
+cd ~
+ls -a
+mkdir .pip
+cd .pip
+vi pip.conf
+“[global]
+index-url = https://mirrors.aliyun.com/pypi/simple/
+”
+配置环境后，直接在linux训练并导出模型
+
+
+（5）实验：
+将一张图片 + 一个imagetotext的模型【压缩再解压】传入kylin中
+并进行相关实验【基于ProcessV2.0脚本进行调试】，进而将相关环境进行部署【配置环境：安装pillow】
+
+
+
+-------- 2024 7 24：5：14，目前还需要调试好ProcessV2.0.py文件，完成之后可能还需要扩充系统的存储空间 + 导入新的模型 + 打包成一个满足赛题要求的程序 + 设计前端页面与系统 ------------------------------
+
+（6）进入root用户命令
+sudo -i
+
+
+（7）为系统分配新的存储空间，并挂载到任意的位置
+在vmware设置中，扩充存储空间
+>> sudo fdisk /dev/sda【进入分区管理界面】
+>> 查看系统分区的始末位置，n -- p -- 盘号 -- w【分配了初始的盘大小】
+>> sudo mkfs.ext4 /dev/sda盘号【格式化】 
+>> sudo resize2fs /dev/sda盘号【调整可能多出来一些的盘容量】
+>> sudo mkdir /AI  【新建/AI目录】
+>> sudo mount /dev/sda3 /AI【将60GB分区，分给/AI】
+>> vim /etc/fstab【配置，永久挂载】
+文件系统           挂载点            类型            选项【default--默认选项；bind--绑定挂载；noatime--不更新时间】     备份fs   第2个被检查的系统
+/data/home      /home           none            defaults,bind           0 0
+/data/root      /root           none            defaults,bind           0 0
+/dev/sda3       /AI             ext4            defaults,noatime        1 2
+
+
+
+-------- 2024 7 25：3：41，还需要调试好ProcessV2.0.py文件，完成之后还需要导入新的模型 + 打包成一个满足赛题要求的程序 + 设计前端页面与系统！ ------------------------------
+
+
+（8）各模型部署
+text2image 模型部署完成，设置各级目录权限、模块环境安装，无其他详细问题
+summarization 模型部署完成，设置各级目录权限，模块环境安装，无其他详细问题
+
+（9）pip缓存空间问题
+期间遇到到了pip缓存空间不足( /home/zhao/.cache/pip 路径)的情况，但是实际上并没有该文件，
+这里通过在.pip/pip.conf文件指定，pip缓存路径来解决
+
+>> mkdir /AI/cacheOfpip
+>> chmod 777 /AI/cacheOfpip
+>> export PIP_CACHE_DIR=/AI/cache/cacheOfpip
+>> echo 'export PIP_CACHE_DIR=/AI/cache/cacheOfpip' >> ~/.bashrc
+>> source ~/.bashrc
+
+
+（10）期间需要datasets版本不兼容问题
+pip install datasets==2.16.0 解决了该问题【一定要找到克服版本兼容的方法啊】
+
+（11）遇到./modelscope 在家目录空间不足的问题【以后创建一个操作系统，一定时间要保证存储空间的分配满足具体业务需求】
+>> mkdir -p /AI/.modelscope
+>> export MODEL_SCOPE_HOME=/AI/.modelscope
+>> echo 'export MODEL_SCOPE_HOME=/AI/.modelscope' >> ~/.bashrc
+>> source ~/.bashrc
+
+
+-------- 2024 7 26：5：31，继续调试新text2audio、audio2text 的模型、引用关键帧工具、 设计多个组件 + 前端 + 系统 ------------------------------
+
+
+（12）名词理解
+分支 —— 理解为某一用户对开源项目的，某一处分支操作，保证了项目中各子模块可以被各成员用户分工处理的情况
+发行版 —— 类似于“版本xxx 功能xxx 日期xxx”的格式
+gitee & gitlink —— 用于支持用户远程管理项目的工具，同时实现了开源、多用户协同开发、用户进度合并、远程系统访问项目等等等操作，可基于git工具&命令来实现项目管理
+git、github、gitee、gitlink —— git是一个底层，其余三者是基于该地层构建的管理平台/工具，github全球体量最大，gitee适合中国社区，gitlink仅适用于vscode
+
+
+-------- 2024.8.3--2:45，继续调试text2audio、audio2text 的模型、引用关键帧工具、 设计多个组件 + 前端 + 系统，通宵处理完。 ------------------------------
+
+（13）基于docker安装“语音识别”大模型【学习docker技术为主】
+① 安装docker工具
+sudo apt docker.io 【openkylin中的docker与其他社区的有一些区别，按其他社区安装会报错】
+
+①* 安装curl，并利用其安装docker【其他社区的安装方案】
+sudo apt-get install curl【apt-get 是ubuntu的包管理命令 curl是命令行工具，用于传输数据，一般用于下载网络文件】
+sudo curl -O https://isv-data.oss-cn-hangzhou.aliyuncs.com/ics/MaaS/ASR/shell/install_docker.sh
+
+② 镜像启动 -- pull 远程的"语音识别"模型docker镜像至本地，创建文件存放模型目录tmp，指定映射、镜像--将tmp挂载至容器中
+sudo docker pull registry.cn-hangzhou.aliyuncs.com/funasr_repo/funasr:funasr-runtime-sdk-online-cpu-0.1.4
+mkdir -p ./funasr-runtime-resources/models
+sudo docker run -p 10096:10095 -it --privileged=true \
+  -v $PWD/funasr-runtime-resources/models:/workspace/models \
+  registry.cn-hangzhou.aliyuncs.com/funasr_repo/funasr:funasr-runtime-sdk-online-cpu-0.1.4
+
+③ 服务端启动，进入funasr执行目录，nphup执行run_server_2pass脚本，指定下载路径，指定VAD模型目录，
+指定语音识别模型目录，指定在线语音识别模型目录，指定标点符号插入模型目录，指定数值文本归一化模型目录，
+指定热词文件目录，指定热刺输出日志文件目录
+
+cd FunASR/runtime
+nohup bash run_server_2pass.sh \
+  --download-model-dir /workspace/models \
+  --vad-dir damo/speech_fsmn_vad_zh-cn-16k-common-onnx \
+  --model-dir damo/speech_paraformer-large_asr_nat-zh-cn-16k-common-vocab8404-onnx  \
+  --online-model-dir damo/speech_paraformer-large_asr_nat-zh-cn-16k-common-vocab8404-online-onnx  \
+  --punc-dir damo/punc_ct-transformer_zh-cn-common-vad_realtime-vocab272727-onnx \
+  --itn-dir thuduj12/fst_itn_zh \
+  --hotword /workspace/models/hotwords.txt > log.out 2>&1 &
+
+【tip：pull下载的镜像会一直存放在缓存目录/var/lib/docker中，后续docke人直接运行该容器，若更新则重新pull即可】
+【tip：docker run之后，会被分配一个伪终端，同时将本地的镜像文件，挂载至容器中的/workspace/models中】
+【tip：启动完毕后，使用tail 查看log.out，会发现该日志文件会不断重定向日志信息，后续就等着客户端(我的linux服务器)来实现访问相关的服务了】
+
+
+④ 另开一个docker终端，进入服务容器，专门用于下载案例，在指定挂载的目录下创建sample，方便映射到openkylin中的/AI/funasr-runtime-resources/Sample
+sudo -i
+docker ps
+
+> CONTAINER ID   IMAGE                                                                                      COMMAND       CREATED          STATUS          PORTS                      NAMES
+> 0c81b11d2791   registry.cn-hangzhou.aliyuncs.com/funasr_repo/funasr:funasr-runtime-sdk-online-cpu-0.1.9   "/bin/bash"   19 minutes ago   Up 19 minutes   0.0.0.0:10095->10095/tcp   
+
+docker exec -it 0c81b11d2791 /bin/bash
+wget https://isv-data.oss-cn-hangzhou.aliyuncs.com/ics/MaaS/ASR/sample/funasr_samples.tar.gz
+mkdir /workspace/models/funasr_samples
+【tip：每次使用语音识别文件时，都需要启动docker容器服务】
+
+⑤ 关闭FunASR服务
+ps -x | grep funasr-wss-server-2pass
+ps aux | grep run_server_2pass.sh
+
+
+>>  133 pts/0    Sl     0:18 /workspace/FunASR/runtime/websocket/build/bin/funasr-wss-server-2pass --download-model-dir /workspace/models --model-dir damo/speech_paraformer-large-vad-punc_asr_nat-zh-cn-16k-common-vocab8404-onnx --online-model-dir damo/speech_paraformer-large_asr_nat-zh-cn-16k-common-vocab8404-online-onnx --vad-dir damo/speech_fsmn_vad_zh-cn-16k-common-onnx --punc-dir damo/punc_ct-transformer_zh-cn-common-vad_realtime-vocab272727-onnx --itn-dir thuduj12/fst_itn_zh --lm-dir damo/speech_ngram_lm_zh-cn-ai-wesp-fst --decoder-thread-num 8 --model-thread-num 1 --io-thread-num 1 --port 10095 --certfile  --keyfile  --hotword /workspace/FunASR/runtime/websocket/hotwords.txt
+>> 2106 pts/1    S+     0:00 grep --color=auto funasr-wss-server-2pass
+
+kill -9 133
+
+个人总结_docker：
+① openkylin通过在线pull相关的容器镜像；
+② 在本地创建好待挂载目录；
+③ 设置端口号、容器与本地的映射、容器镜像完成容器到本地的环境挂载；
+④到容器启动服务；
+⑤ 本地完成镜像相关资源、服务的使用
+
+
+（14）完成语音识别模型部署【https://github.com/modelscope/FunASR#installation】 -- audio_to_text【注意，官方推荐的采样率为16000，不然数据shape会报错】
+① 基础依赖模块【python>=3.8、torch>=1.13、torchaudio、funasr、modelscope、huggingface_hub】
+② 通过官方下载模型SDK--注意需要是离线版本的，并将推理代码，部署至openkylin
+
+
+（15）完成语音合成模型部署 -- text_to_audio
+① 该模型只能在openkylin类似的linux中实现；
+② 为/home/zhao分配新的空间/dev/sda8，并挂载 mount /dev/sda8 /home/zhao 并设置chown -R zhao:zhao /home/zhao
+③ 安装依赖时，有一个包：pip install kantts==1.0.1 -f https://modelscope.oss-cn-beijing.aliyuncs.com/releases/repo.html，需要特定项目链接完成
+④ 其中安装pysptk依赖时，安装python3.8-dev开发板，sudo apt-get install python3.8-dev
+⑤ 模型部署完成
+
+
+（16）处理视频文件【明天的后续内容，均在openkylin系统完成】
+① 将这三部分："提取视频帧"；"提取每个关键帧的时间戳"；"指定始末时间，提取音频流" ，的fmmpeg命令基于subprocess转换成适用于linux的.py文件，满足下述要求。
+② 提取"关键帧的时间戳"、"提取关键帧之间的所有的图片"，"并解析转换成文本1"，
+③ 基于"关键帧的时间戳"提取"关键帧之间的所有语音"并转成文本2，文本1 与 文本2 结合后，基于summarization + prompt--电影画面、电影字幕，转成“解说”的格式
+④ 基于"各关键帧之间所有的图片"形成解说词【音to文+图to文+prompt+summarization】，并基于文to音工具，生成音频1；
+⑤ 根据音频1的时长 + 关键帧起始时长，基于"if时间判断"确定"关键帧后待考虑的总帧图片数"；
+⑥ 为每个关键帧都进行②~⑤的操作，直到所有关键帧处理完毕，即可完成视频的解说
+
+【根据生成的音频时长，确定关键帧之后需要包含的帧数】
+
+------------------------- 今天到此为止 2024-8-5-3:04 今日完成了剩余模块与工具的调试实现与代码化，明天将视频处理部分解决，即可初步完成任务 -----------------------
+
+
+大模型算法原理【算法背景 + 算法公式 + 算法流程图】：
+语音 to 文本  ——  https://www.modelscope.cn/models/iic/speech_paraformer-large_asr_nat-zh-cn-16k-common-vocab8404-pytorch 
+图片 to 文本 —— https://www.modelscope.cn/models/iic/mplug_image-captioning_coco_base_en
+文本总结（摘要）—— 文字描述
+文本 to 语音 —— https://www.modelscope.cn/models/iic/speech_sambert-hifigan_tts_zhiyan_emo_zh-cn_16k
+
+
+（17）导入大语言模型API：
+① 设置永久变量，key
+>> export DASHSCOPE_API_KEY='sk-8ee136df3d1c461bb85c60a31418d43a' >> ~/.bashrc
+>> source ~/.bashrc
+
+② 下载SDK
+pip install dashscope
+
+
+③ 链接完毕
+# 大语言模型API
+def text_to_commentary(Question):
+    dashscope.api_key="sk-8ee136df3d1c461bb85c60a31418d43a"
+    messages = [{'role': 'system', 'content': 'You are a helpful assistant.'},
+                {'role': 'user', 'content': Question}]
+
+    response = dashscope.Generation.call(
+        dashscope.Generation.Models.qwen_turbo,
+        messages=messages,
+        result_format='message',)  # 将返回结果格式设置为 message
+    
+    answer = response.output.choices[0].message.content
+    return answer
+
+# answer = text_to_commentary(Question).replace('\n','')
+
+
+
+（18）初步项目调试
+① 安装 opencv
+pip install opencv-python
+
+② vs code远程百年祭虚拟机py项目
+下载拓展 -- Remote-Developoment -- 其会自动一个remote ssh拓展，建议选择0.55.0版本 -- 进入设置，选择remote-ssh设置，选择始终显示ssh登陆终端 -- ctl+shift+P，填入ssh -- 选择ssh的Open Configuration File 
+
+openkylin中，先卸载 -- sudo apt-get remove openssh-server、安装 -- sudo apt-get install openssh-server、 重启ssh 服务 -- sudo service ssh --full-restart、 自动启动 -- sudo systemctl enable ssh
+
+sudo cp /etc/ssh/sshd_config /etc/ssh/sshd_config.backup # 备份
+sudo vim /etc/ssh/sshd_config # 编辑
+
+输入以下内容：
+Port 22
+UsePrivilegeSeparation no
+PasswordAuthentication yes
+PermitRootLogin yes
+AllowUsers hhh # 这里的 "hhh" 改成你自己的登陆用户名
+# ----------------- 以下提前留出公钥配置（可选）-----------------------
+RSAAuthentication yes
+PubKeyAUthentication yes
+
+
+设置 /c:/users/mr/.ssh/config内容如下：
+# Read more about SSH config files: https://linux.die.net/man/5/ssh_config
+Host zhao
+    HostName 192.168.80.128
+    User zhao
+    Port 22
+
+
+设置vs code的设置文件，添加以下内容：
+"remote.SSH.remotePlatform":{
+    "ubuntu18.04": "linux"  // 远程连接时，自动选择linux系统，注意和上面的"host"匹配
+    },
+
+然后ctl+shift+p，输入ssh，选择连接远程ssh，即可连接openkylin的相关项目【目前还没有连接成功，但是可以用notepat++替代编辑】
+
+③ 安装moviepy模块
+
+
+④ 清理冗余音频
+rm -rf commentary_audio/*
+rm -rf concat_video_audio/*
+rm -rf key_frame_video/* 
+rm -rf img/*
+
+--------------- 7:25 调试基本完成 ------------------
+
+
+
+（19）前端页面设计
+基于h-c-j + Flask，设计一个小型的AI音频智能工具
+包括：
+① 大语言模型--对话框，输入文本，返回文本
+② 视频剪辑--输入区域--输入MP4数据到后台处理后，返回MP4数据
+③ 图片解析--输入区域--输入图片(支持jpg,png)，返回图片内容
+④ 语音合成--输入框--输入文字--返回.wav音频文件
+⑤ 语音识别--输入区域--输入.wav文件--返回文本
+
+本项目仅设计一张大界面，所有功能均以实现，现在开始，5个小时内准备好所有材料
+
+
+
+（20）本项目将openkylin基于vmware虚拟机进行部署，具体服务如下：
+
+① 大语言模型--对话框，输入文本，返回文本
+② AI视频剪辑--输入区域--输入MP4数据到后台处理后，返回MP4数据
+③ 图片解析--输入区域--输入图片(支持jpg,png)，返回图片内容
+④ 语音合成--输入框--输入文字--返回.wav音频文件
+⑤ 语音识别--输入区域--输入.wav文件--返回文本
+
+
+------------------------------------------------  小技巧  ------------------------------------
+Ubuntu 命令小技巧：
+1、vim编辑器：ctrl + f 、ctrl + b
+2、命令分行编辑--逻辑清晰 ： 命令行 + \
+3、关闭终端，但不挂断服务的服务启动命令 no hang up：nohup bash xxx.sh
+
+huggingface：
+1、通过automodel、autotokenizer以下载"模型权重文件"
+【config.json、pytorch_model.bin、tokenizer_config.json、vocab.txt、special_tokens_map.json、merges.txt等】
+再通过 .from_pretrain 方法导入相关得文件。
+
+空间扩容：
+以后在虚拟机中，只要某个文件显示大小不够，就直接fdisk /dev/sda扩容，再格式化，直接挂载，设置好权限后直接使用即可
+
+
+ffmpeg 视频、音频处理笔记：
+1、个人理解为，音频的每个样本，就对应视频的每一帧；音频的采样率，就对应视频的fps
+2、基于ffmpeg处理视频
+① 提取视频帧：
+ffmpeg -i input.mp4 -vf "select=eq(pict_type\,I)" -vsync vfr output_%03d.jpg
+【-i 指定视频文件】
+【-vf 选择"帧类型"：I--关键帧、P--预测帧(前2个)、B--bi预测帧(前后1个)】
+【-vsync vfr 提取的帧，与原视频的帧变化一致】
+【指定输出文件名，"%03d"表示3个整型占位】
+
+
+② 提取每个关键帧的时间戳：
+ffprobe -v error -select_streams v:0 -show_frames -show_entries frame=pict_type,best_effort_timestamp_time -of csv=p=0 firstRun.mp4 | findstr /C:I【win10】
+ffprobe -v error -select_streams v:0 -show_frames -show_entries frame=pict_type,best_effort_timestamp_time -of csv=p=0 firstRun.mp4 | grep "I"【openkylin】
+【-v 指定日志显示级别，如:info error warn】
+【-select_streams v:0 只关注视频流，且从索引为0视频流开始】
+【-show frame 显示每一帧信息】
+【-show_entries frame=pict_type=I,best_effort_timestamp_time 显示各帧类型、各帧时间戳】
+【-of csv=p=0 指定输出格式为csv，不设置字段分隔符(0)】
+【输入文件路径】
+【| findstr /C:I 管道命令 findstr /C: 后接 "I"，搜索包含"I"字符的行】
+
+
+③ 指定始末时间，提取音频流：
+ffmpeg -i input.mp4 -ss {start_time} -to {end_timestemp} -vn -acodec copy audio_segment.aac
+【-i 指定输入视频】
+【-ss 指定起始时间】
+【-to 指定结束时间】
+【-vn 只提取音频，不提取视频】
+【-acodec copy  直接复制"原始音频流"而不重新编码，保持原始音频质量】
+【指定输出文件名】
+
+
+--------------- debug --------------------
+1、AttributeError: TextToSpeechSambertHifiganPipeline: SambertHifigan: module 'ttsfrd' has no attribute 'TtsFrontendEngine'
+原因：
+linux系统转到windows，出现了对应的代码报错，需要替换 ttsfrd模块中的 TtsFrontendEngine 方法
+
+将下述代码进行更新：
+# 15、语音合成 -- windows版本
+def text_to_audio(text, output_audio_file):
+    engine = pyttsx3.init()
+    engine.setProperty('rate', 150)  # 设置语速
+    engine.setProperty('volume', 1)  # 设置音量
+
+    # 获取可用的语音列表
+    voices = engine.getProperty('voices')
+
+    # 设置中文语音（以微软的中文语音为例）
+    for voice in voices:
+        if "zh-CN" in voice.languages:
+            engine.setProperty('voice', voice.id)
+            break
+
+    # 将文本转换为语音并保存为文件
+    engine.save_to_file(text, output_audio_file)
+    engine.runAndWait()
+
+2、
+
+
+
+
+

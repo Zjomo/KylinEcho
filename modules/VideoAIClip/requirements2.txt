@@ -1,0 +1,23 @@
+pip install opencv-python
+pip install dashscope
+pip install soundfile
+pip install werkzeug
+pip install modelscope
+pip install torch
+pip install datasets==2.16.0
+pip install oss2
+pip install pillow
+pip install funasr
+pip install torchaudio
+pip install flask
+pip install flask_cors
+pip install transformers
+pip install moviepy
+pip install simplejson
+pip install sortedcontainers
+sudo apt-get install python3.8-dev
+pip install kantts==1.0.1 -f https://modelscope.oss-cn-beijing.aliyuncs.com/releases/repo.html
+pip install pytorch_wavelets
+pip install "modelscope[audio]" -f https://modelscope.oss-cn-beijing.aliyuncs.com/releases/repo.html
+pip install ttsfrd -f https://modelscope.oss-cn-beijing.aliyuncs.com/releases/repo.html
+conda install -c conda-forge kaldi
