@@ -95,8 +95,7 @@ def exact_audio_timestemp(input_file,start_time,end_time,output_file):
 
 # 5、语音识别
 def audio_to_text(audio_file):
-    root_dict = os.getcwd()
-    model_dict = os.path.join(root_dict, 'models', 'audio2txt')
+    model_dict = os.path.join(_script_dir, 'models', 'audio2txt')
     model = AutoModel(model=model_dict, model_revision="v2.0.4")
 
     # 读取音频文件
@@ -395,6 +394,9 @@ def AI_Video_Clip(video_path,output_file):
     # 临时目录存储所有帧，至各自的路径
     temp_dir = os.path.join(root_dict, 'temp_frames')
     os.makedirs(temp_dir, exist_ok=True)
+    # 确保后续需要的子目录存在
+    for sub in ('key_frame_video', 'commentary_audio', 'concat_video_audio'):
+        os.makedirs(os.path.join(os.getcwd(), 'Video', sub), exist_ok=True)
     split_frames_into_intervals(video_path, timestamps, temp_dir, keyframe_output_dir, fps)
     shutil.rmtree(temp_dir)
 
@@ -438,7 +440,7 @@ def AI_Video_Clip(video_path,output_file):
 
     # 4、解说词_语音生成
     # model_id = 'damo/speech_sambert-hifigan_tts_zh-cn_16k'
-    model_id = os.path.join(os.getcwd(), 'models', 'text2audio')
+    model_id = os.path.join(_script_dir, 'models', 'text2audio')
 
     # 根据，批量生成解说词.wav文件
     for id_, commentary in enumerate(commentary_list):
@@ -479,7 +481,9 @@ def AI_Video_Clip(video_path,output_file):
 
 
 #################### 处理部分
-# 路径设置
+# 脚本所在目录 (VideoAIClip/) - 用于加载本地模型
+_script_dir = os.path.dirname(os.path.abspath(__file__))
+# 项目根目录 (CWD) - 用于视频文件路径
 root_dict = os.getcwd()
 keyframe_output_dir = os.path.join(root_dict, 'Video', 'img')
 Keyframe_output_filename = os.path.join(root_dict, 'video', 'img', 'output_%06d.jpg')
@@ -487,7 +491,7 @@ os.makedirs(keyframe_output_dir, exist_ok=True)
 
 
 # 预编码器 与 预训练模型
-model_url = os.path.join(root_dict, 'models', 'Image2text')
+model_url = os.path.join(_script_dir, 'models', 'Image2text')
 processor = BlipProcessor.from_pretrained(model_url)
 model = BlipForConditionalGeneration.from_pretrained(model_url)
 

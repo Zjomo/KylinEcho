@@ -9,7 +9,9 @@ from utils import *
 warnings.filterwarnings('ignore')
 
 
-# 路径设置
+# 脚本所在目录 (VideoAIClip/) - 用于加载本地模型
+_script_dir = os.path.dirname(os.path.abspath(__file__))
+# 项目根目录 (CWD) - 用于视频文件路径
 root_dict = os.getcwd()
 # video_path = os.path.join(root_dict, 'Video', 'firstRun.mp4')
 keyframe_output_dir = os.path.join(root_dict, 'Video', 'img')
@@ -18,7 +20,7 @@ Keyframe_output_filename = os.path.join(root_dict, 'video', 'img', 'output_%06d.
 # 确保输出目录存在
 os.makedirs(keyframe_output_dir, exist_ok=True)
 # 预编码器 与 预训练模型
-model_url = os.path.join(root_dict, 'models', 'Image2text')
+model_url = os.path.join(_script_dir, 'models', 'Image2text')
 processor = BlipProcessor.from_pretrained(model_url)
 model = BlipForConditionalGeneration.from_pretrained(model_url)
 
@@ -59,7 +61,7 @@ def AI_Video_API(video_path,output_file):
     os.makedirs(keyframe_output_dir, exist_ok=True)
 
     # 预编码器 与 预训练模型
-    model_url = os.path.join(root_dict, 'models', 'Image2text')
+    model_url = os.path.join(_script_dir, 'models', 'Image2text')
     processor = BlipProcessor.from_pretrained(model_url)
     model = BlipForConditionalGeneration.from_pretrained(model_url)
 
@@ -111,8 +113,7 @@ def text_to_audio(text, output_audio_file):
 
 # 4、语音识别
 def audio_to_text(audio_file):
-    root_dict = os.getcwd()
-    model_dict = os.path.join(root_dict, 'models', 'audio2txt')
+    model_dict = os.path.join(_script_dir, 'models', 'audio2txt')
     model = AutoModel(model=model_dict, model_revision="v2.0.4")
 
     speech, sample_rate = soundfile.read(audio_file)
@@ -181,7 +182,7 @@ def speech_synthesis_route():
     data = request.json
     text = data.get('text', '')
     output_audio_file = 'synthesized.wav'
-    model_id = os.path.join(os.getcwd(), 'models', 'text2audio')
+    model_id = os.path.join(_script_dir, 'models', 'text2audio')
     text_to_audio(text, output_audio_file)
     
     return send_file(output_audio_file, as_attachment=True, download_name=output_audio_file, mimetype="audio/wav")
