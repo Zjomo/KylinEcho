@@ -1,8 +1,8 @@
-# KylinEcho
+﻿# KylinEcho
 
 <div align="center">
 
-**字幕生成与自动剪辑系统** | **Subtitle Generation & Auto-Editing System**
+**VisionBlend · 基于多模态大模型的视频理解与智能字幕系统** | **Video Understanding & Intelligent Subtitling System**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Node.js](https://img.shields.io/badge/Node.js-%5E18.18.0%20%7C%20%5E20.9.0%20%7C%20%3E%3D22.0.0-brightgreen)](https://nodejs.org/)
@@ -15,18 +15,65 @@
 
 ## 📖 项目介绍 | Project Overview
 
-KylinEcho 是一个功能强大的**字幕生成与自动剪辑系统**，集成了现代化的Web前端、Electron桌面应用、以及高效的视频处理能力。该系统支持批量视频处理、自动字幕提取与生成、智能内容剪辑等核心功能。
+KylinEcho（**VisionBlend 视融智析**）是一个基于**多模态大模型**的**视频理解与智能字幕系统**，集成了现代化的 Web 前端、Electron 桌面应用，以及高效的 AI 视频处理能力。系统面向教育、直播、跨国协作、媒体制作等场景，实现视频语音的实时识别、字幕自动生成与时间轴同步、多语言翻译切换，以及智能内容剪辑。
 
-KylinEcho is a powerful **subtitle generation and auto-editing system** that integrates a modern web frontend, Electron desktop applications, and efficient video processing capabilities. The system supports batch video processing, automatic subtitle extraction and generation, intelligent content editing, and more.
+KylinEcho (**VisionBlend**) is a **video understanding and intelligent subtitling system** built on **multimodal large language models**. It combines a modern web frontend, an Electron desktop app, and efficient AI video processing. The system targets education, live-streaming, cross-language collaboration, and media production, delivering real-time speech recognition, automatic subtitle generation with timeline synchronization, multi-language translation, and intelligent content editing.
 
 ### ✨ 核心特性 | Key Features
 
-- 🎬 **视频字幕提取** - Extract subtitles from video files automatically
-- ✂️ **智能视频剪辑** - Intelligent video editing and clipping capabilities
+- 🎬 **实时字幕生成** - Real-time subtitle generation from live video/audio streams (<1s latency)
+- 📼 **离线视频分析** - Offline video processing with speaker diarization & subtitle burn-in
+- 🔇 **人声背景降噪** - AI-based vocal / background-audio separation (MDX models)
+- 📝 **硬字幕提取** - OCR extraction of burned-in subtitles with draggable region
+- 🗣️ **多说话人分离** - Multi-speaker identification and independent subtitle streams
+- 🌍 **多语言实时互译** - Real-time translation across 9 languages (中/英/日 …)
 - 🖥️ **跨平台支持** - Web UI + Electron desktop application
-- ⚡ **高性能处理** - Optimized for batch video processing
-- 🌍 **国际化支持** - Multi-language localization ready
-- 📊 **可视化界面** - Rich UI with Element Plus & Tailwind CSS
+- 📊 **资源监控看板** - Live CPU / GPU / memory dashboard with dynamic visualization
+
+---
+
+## 🏗️ 系统架构 | System Architecture
+
+系统采用「数据层 — 算法层 — 应用层」三层架构。多模态算法层融合音频识别、文本翻译、音色识别、人声/背景噪声分离、LLM 与 OCR 能力，向上支撑实时字幕生成、离线字幕生成、背景噪声过滤、硬字幕提取、多说话人识别、智能字幕烧录六大应用。
+
+![VisionBlend System Architecture](docs/images/architecture.png)
+
+| 层级 | 组成 |
+|------|------|
+| **应用层** Application | 实时字幕生成 · 离线字幕生成 · 背景噪声过滤 · 硬字幕提取 · 多说话人识别 · 智能字幕烧录 |
+| **算法层** Algorithm | 音频识别 (Paraformer-large / Whisper) · 文本翻译 (LLM) · 音色识别 · 人声/背景噪声分离 (MDX) · OCR (PaddleOCR) |
+| **数据层** Data | MP4/WAV 本地音视频 · index.m3u8 在线流 · VB-Audio 系统实时输入流 · 16kHz 单声道 PCM |
+
+---
+
+## 🖼️ 系统案例展示 | Screenshots & Demo
+
+> 完整演示视频见本地文件：`Material/操作系统_基于openKylin和多模态智能字幕生成系统.mp4`
+> 示例素材见 `example/`（实时 / 离线 / 硬字幕 / 音频 测试用例）。
+
+### 1️⃣ 实时字幕生成 | Real-time Subtitle Generation
+
+支持源语言/翻译语言选择、字幕样式实时配置、说话人识别，以及内存/CPU/GPU 资源监控看板。
+
+![Real-time Subtitle Generation](docs/images/screenshot-realtime-subtitle.png)
+
+### 2️⃣ 离线视频分析 | Offline Video Analysis
+
+上传本地视频后自动分离音视频、识别多说话人，生成带说话人标记与时间戳的字幕，并导出 `.srt` 与烧录字幕的 `.mp4`。
+
+![Offline Video Analysis](docs/images/screenshot-offline-subtitle.png)
+
+### 3️⃣ 人声背景音频去噪 | Vocal & Background Separation
+
+基于 MDX 模型一键分离人声与背景噪声，支持 MP3/WAV 上传与分离结果在线试听、`.wav` 下载。
+
+![Vocal and Background Separation](docs/images/screenshot-noise-removal.png)
+
+### 4️⃣ 硬字幕提取 | Hard-subtitle OCR Extraction
+
+通过可拖拽的 OCR 识别框实时提取视频内嵌字幕，输出带时间戳的字幕列表并支持 `.srt` 导出。
+
+![Hard-subtitle OCR Extraction](docs/images/screenshot-hard-subtitle.png)
 
 ---
 
@@ -50,16 +97,15 @@ KylinEcho is a powerful **subtitle generation and auto-editing system** that int
 - **Build**: Tailwind CSS 4.1 + PostCSS
 - **Git Hooks**: Husky + Lint-staged + Commitlint
 
-### Language Composition
-| Language | Percentage | Purpose |
-|----------|-----------|---------|
-| Scheme | 34.3% | Logic and computation |
-| Lex | 28.8% | Lexical analysis |
-| Tree-sitter Query | 21.5% | Syntax parsing |
-| Vue | 7.7% | UI components |
-| TypeScript | 3.3% | Type-safe JavaScript |
-| Python | 2.9% | Video processing backend |
-| Other | 1.5% | Configuration & utilities |
+### AI Backend (Python)
+- **ASR / Speech**: `faster-whisper`, `pyannote.audio` (speaker diarization), DashScope (Qwen)
+- **Translation / LLM**: `dashscope`, `transformers`
+- **OCR**: `je-paddleocr`, `paddlepaddle`, `paddle2onnx`
+- **Audio & Vision**: `PyAudio`, `opencv-python`, `pysrt`, FFmpeg pipeline
+- **Inference Runtime**: `onnxruntime-gpu` / `onnxruntime-directml`
+- **Service**: `flask`, `flask-socketio` (WebSocket realtime streaming)
+
+See [`modules/requirements.txt`](modules/requirements.txt) for the full list.
 
 ---
 
@@ -80,6 +126,23 @@ cd KylinEcho
 # Install dependencies
 pnpm install
 ```
+
+### AI 后端 | AI Backend (Python)
+
+Each functional module runs as an independent Python service (`app.py`). Create an environment and install the requirements, then start the modules you need:
+
+```bash
+# Install Python dependencies
+pip install -r modules/requirements.txt
+
+# Start individual AI services
+python modules/RealtimeClient/app.py            # 实时字幕生成
+python modules/OfflineSpeakersSubtitles/app.py  # 离线视频分析
+python modules/AudioDenoising/app.py            # 人声背景去噪
+python modules/HardSubtitleExtraction/app.py    # 硬字幕提取
+```
+
+> On Windows you can launch the frontend + Electron + all AI services at once via [`modules/run_script.bat`](modules/run_script.bat) (edit the `PYTHON_PATH_*` variables to point at your environment first).
 
 ### 开发 | Development
 
@@ -119,13 +182,23 @@ pnpm preview:build
 
 ---
 
-## 📁 项���结构 | Project Structure
+## 📁 项目结构 | Project Structure
 
 ```
 KylinEcho/
-├── src/                          # Main application source
-├── modules/
-│   └── SystemElectron/          # Electron desktop application
+├── src/                          # Main web application source (Vue 3)
+├── modules/                      # AI backend modules (Python)
+│   ├── RealtimeClient/           # 实时字幕生成引擎
+│   ├── OfflineSpeakersSubtitles/ # 离线视频分析 + 多说话人字幕
+│   ├── AudioDenoising/           # 人声背景音频去噪
+│   ├── HardSubtitleExtraction/   # 硬字幕 OCR 提取
+│   ├── VideoAIClip/              # 智能视频剪辑
+│   ├── SystemElectron/           # Electron 桌面应用
+│   ├── models/                   # 预训练模型
+│   └── requirements.txt          # Python 依赖
+├── docs/images/                  # 系统架构图与案例截图
+├── example/                      # 演示与测试素材（实时/离线/硬字幕/音频）
+├── Material/                     # 项目文档、PPT 与完整演示视频
 ├── public/                       # Static assets
 ├── types/                        # TypeScript type definitions
 ├── locales/                      # Internationalization files
