@@ -34,4 +34,5 @@ tests/**/coverage/
 tsconfig.tsbuildinfo
 
 modules/OfflineSpeakersSubtitles/transcriber.py
+Material/
 
